@@ -263,11 +263,33 @@ function getFollowUps(question) {
   ];
 }
 
+// Compute follow-ups with stability tracking
+function computeFollowUpsWithState(previousList, newList) {
+  const previousSet = new Set(previousList || []);
+  const newSet = new Set(newList);
+
+  const result = [];
+
+  // Add items from new list, marking if they're stable or new
+  for (const question of newList) {
+    result.push({
+      question,
+      isStable: previousSet.has(question),
+      isNew: !previousSet.has(question),
+    });
+  }
+
+  return result;
+}
+
 function AskMeAnythingPage() {
   const [conversation, setConversation] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [streamingIndex, setStreamingIndex] = useState(null);
   const [displayedWords, setDisplayedWords] = useState(0);
+  const [previousFollowUps, setPreviousFollowUps] = useState(null);
+  const [currentFollowUps, setCurrentFollowUps] = useState([]); // Follow-ups with stability state
+  const [askedQuestion, setAskedQuestion] = useState(null); // The question that was just asked
   const activeEntryRef = useRef(null);
   const conversationRef = useRef(null);
   const streamInterval = useRef(null);
@@ -277,10 +299,22 @@ function AskMeAnythingPage() {
     setActiveIndex(0);
     setStreamingIndex(null);
     setDisplayedWords(0);
+    setPreviousFollowUps(null);
+    setCurrentFollowUps([]);
+    setAskedQuestion(null);
     if (streamInterval.current) clearInterval(streamInterval.current);
   };
 
   const handleQuestionClick = (question) => {
+    // Save the question being asked (to show pinned at top)
+    setAskedQuestion(question);
+
+    // Save current follow-ups before transitioning (to compare for stability)
+    const prevFollowUps = currentFollowUps.length > 0
+      ? currentFollowUps.map(f => f.question)
+      : suggestionQuestions;
+    setPreviousFollowUps(prevFollowUps);
+
     const answer = getAnswer(question);
     setConversation(prev => {
       const next = [...prev, { question, answer }];
@@ -308,6 +342,12 @@ function AskMeAnythingPage() {
         clearInterval(streamInterval.current);
         setStreamingIndex(null);
         setDisplayedWords(0);
+
+        // Compute new follow-ups with stability tracking
+        const newFollowUps = getFollowUps(entry.question);
+        const followUpsWithState = computeFollowUpsWithState(previousFollowUps, newFollowUps);
+        setCurrentFollowUps(followUpsWithState);
+        setPreviousFollowUps(null);
       } else {
         setDisplayedWords(current);
       }
@@ -316,9 +356,18 @@ function AskMeAnythingPage() {
     return () => {
       if (streamInterval.current) clearInterval(streamInterval.current);
     };
-  }, [streamingIndex]);
+  }, [streamingIndex, previousFollowUps]);
 
   const handleEntryClick = (index) => {
+    const entry = conversation[index];
+    if (entry) {
+      // Update pinned question to show the clicked entry
+      setAskedQuestion(entry.question);
+      // Update follow-ups to match the clicked question (all stable, no animation)
+      const followUps = getFollowUps(entry.question);
+      setCurrentFollowUps(followUps.map(q => ({ question: q, isStable: true, isNew: false })));
+    }
+    // Trim conversation to the clicked entry
     setConversation(prev => prev.slice(0, index + 1));
     setActiveIndex(index);
   };
@@ -412,27 +461,39 @@ function AskMeAnythingPage() {
           )}
         </div>
 
-        <div className="ama-page-sidebar">
+        <div className={`ama-page-sidebar ${streamingIndex !== null ? 'dimmed' : ''}`}>
           <div className="ama-page-sidebar-header">
             <h3 className="ama-page-sidebar-title">Suggested questions</h3>
           </div>
           {hasConversation && (
-            <div className="ama-page-sidebar-questions" key={activeIndex}>
-              {streamingIndex !== null ? (
-                Array.from({ length: 8 }).map((_, index) => (
-                  <div key={index} className="ama-page-followup-skeleton">
-                    <div className="ama-page-skeleton-line" />
-                    {index % 2 === 0 && <div className="ama-page-skeleton-line short" />}
+            <div className="ama-page-sidebar-questions">
+              {/* Pinned: the question that was just asked */}
+              {askedQuestion && (
+                <div className="ama-page-asked-question">
+                  <span className="ama-page-asked-label">Asked</span>
+                  <span className="ama-page-asked-text">{askedQuestion}</span>
+                </div>
+              )}
+
+              {streamingIndex !== null && previousFollowUps ? (
+                // During streaming: show previous follow-ups dimmed (no animation, no interaction)
+                previousFollowUps.map((question, index) => (
+                  <div
+                    key={question}
+                    className="ama-page-followup-btn disabled"
+                  >
+                    {question}
                   </div>
                 ))
               ) : (
-                getFollowUps(activeQuestion).map((question, index) => (
+                // After streaming: show follow-ups with stability-aware animation
+                currentFollowUps.map((item) => (
                   <button
-                    key={index}
-                    className="ama-page-followup-btn"
-                    onClick={() => handleQuestionClick(question)}
+                    key={item.question}
+                    className={`ama-page-followup-btn ${item.isNew ? 'is-new' : 'is-stable'}`}
+                    onClick={() => handleQuestionClick(item.question)}
                   >
-                    {question}
+                    {item.question}
                   </button>
                 ))
               )}

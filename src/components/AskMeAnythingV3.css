@@ -1,0 +1,466 @@
+.v3-page {
+  min-height: 100vh;
+  background: #F7F7F7;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.v3-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.v3-title {
+  font-family: "DM Sans", sans-serif;
+  font-size: 36px;
+  font-weight: 400;
+  margin: 0;
+  color: #161A1F;
+}
+
+.v3-title em {
+  font-style: normal;
+  font-weight: 700;
+}
+
+.v3-subtitle {
+  font-family: "DM Sans", sans-serif;
+  font-size: 15px;
+  color: #666;
+  margin: 8px 0 0;
+}
+
+.v3-container {
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.v3-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 80px;
+}
+
+/* Initial state */
+.v3-initial {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.v3-initial-prompt {
+  font-family: "DM Sans", sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: #161A1F;
+  margin: 0 0 24px;
+}
+
+.v3-initial-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.v3-chip {
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: 1px solid #DDD;
+  background: #FFF;
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.v3-chip:hover {
+  border-color: #999;
+  background: #F5F5F5;
+}
+
+/* Messages */
+.v3-message {
+  display: flex;
+}
+
+.v3-message-user {
+  justify-content: flex-end;
+}
+
+.v3-message-agent {
+  justify-content: flex-start;
+}
+
+.v3-text {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.v3-message-user .v3-text {
+  background: #161A1F;
+  color: #FFF;
+  border-bottom-right-radius: 4px;
+}
+
+.v3-message-agent .v3-text {
+  background: #FFF;
+  color: #161A1F;
+  border: 1px solid #E5E5E5;
+  border-bottom-left-radius: 4px;
+}
+
+/* Cards */
+.v3-card {
+  background: #FFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 100%;
+}
+
+.v3-card-prompt {
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+/* Choice cards */
+.v3-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.v3-choice-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  background: #FAFAFA;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.v3-choice-btn:hover:not(:disabled) {
+  border-color: #999;
+  background: #F0F0F0;
+}
+
+.v3-choice-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.v3-choice-icon {
+  font-size: 20px;
+}
+
+.v3-choice-label {
+  font-family: "DM Sans", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #161A1F;
+}
+
+/* Dentist cards */
+.v3-dentists {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.v3-dentist {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  background: #FAFAFA;
+}
+
+.v3-dentist-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.v3-dentist-name {
+  font-family: "DM Sans", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #161A1F;
+}
+
+.v3-dentist-meta {
+  display: flex;
+  gap: 8px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  color: #666;
+}
+
+.v3-dentist-slot {
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2E7D32;
+}
+
+.v3-book-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #161A1F;
+  color: #FFF;
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.v3-book-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.v3-book-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Progress cards */
+.v3-progress-card {
+  background: #FAFAFA;
+}
+
+.v3-progress-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.v3-progress-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.v3-progress-indicator {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.v3-progress-done .v3-progress-indicator {
+  background: #2E7D32;
+  color: #FFF;
+}
+
+.v3-progress-working .v3-progress-indicator {
+  background: #E3F2FD;
+  color: #1976D2;
+}
+
+.v3-progress-pending .v3-progress-indicator {
+  background: #E5E5E5;
+  color: #999;
+}
+
+.v3-progress-content {
+  flex: 1;
+}
+
+.v3-progress-label {
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #161A1F;
+}
+
+.v3-progress-detail {
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  color: #666;
+}
+
+.v3-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #E3F2FD;
+  border-top-color: #1976D2;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Confirmation cards */
+.v3-confirmation-card {
+  background: #F0FDF4;
+  border-color: #BBF7D0;
+}
+
+.v3-confirmation-title {
+  font-family: "DM Sans", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #166534;
+  margin-bottom: 4px;
+}
+
+.v3-confirmation-dentist {
+  font-family: "DM Sans", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #161A1F;
+  margin-bottom: 16px;
+}
+
+.v3-confirmation-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.v3-confirmation-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+}
+
+.v3-confirmation-label {
+  color: #666;
+}
+
+.v3-confirmation-value {
+  color: #161A1F;
+  font-weight: 500;
+}
+
+.v3-confirmation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.v3-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  background: #FFF;
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.v3-action-btn:hover {
+  background: #DCFCE7;
+}
+
+/* Form cards */
+.v3-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.v3-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.v3-form-label {
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+}
+
+.v3-form-input,
+.v3-form-select {
+  padding: 12px;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 15px;
+  background: #FAFAFA;
+}
+
+.v3-form-input:focus,
+.v3-form-select:focus {
+  outline: none;
+  border-color: #999;
+  background: #FFF;
+}
+
+.v3-form-submit {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #161A1F;
+  color: #FFF;
+  font-family: "DM Sans", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.v3-form-submit:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.v3-form-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Restart button */
+.v3-restart {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border: 1px solid #DDD;
+  border-radius: 24px;
+  background: #FFF;
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  transition: all 0.2s;
+}
+
+.v3-restart:hover {
+  border-color: #999;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
