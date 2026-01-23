@@ -1,10 +1,10 @@
-import AskMeAnything from './components/AskMeAnything';
+import AskMeAnythingPage from './components/AskMeAnythingPage';
 import './App.css';
 
 function App() {
   return (
     <div className="app">
-      <AskMeAnything />
+      <AskMeAnythingPage />
     </div>
   );
 }
