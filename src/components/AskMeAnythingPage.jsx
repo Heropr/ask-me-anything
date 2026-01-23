@@ -417,7 +417,7 @@ function AskMeAnythingPage() {
             <h3 className="ama-page-sidebar-title">Suggested questions</h3>
           </div>
           {hasConversation && (
-            <div className="ama-page-sidebar-questions">
+            <div className="ama-page-sidebar-questions" key={activeIndex}>
               {streamingIndex !== null ? (
                 Array.from({ length: 8 }).map((_, index) => (
                   <div key={index} className="ama-page-followup-skeleton">
