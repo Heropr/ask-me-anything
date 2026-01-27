@@ -1,5 +1,95 @@
 /* V5: V2 layout + agentic cards, sidebar reveals after first interaction */
 
+/* ==========================================================================
+   Design Tokens
+   ========================================================================== */
+
+:root {
+  /* Timing */
+  --exit-duration: 0.15s;
+
+  /* Chip Component System */
+  --chip-bg: #F5F5F8;
+  --chip-bg-hover: #EBEBEF;
+  --chip-border-color: #E1E1E6;
+  --chip-text-color: #333333;
+  --chip-radius: 12px;
+  --chip-font-size: 14px;
+}
+
+/* ==========================================================================
+   Base Chip Component
+   ========================================================================== */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--chip-border-color);
+  border-radius: var(--chip-radius);
+  background: var(--chip-bg);
+  font-family: "DM Sans", sans-serif;
+  font-size: var(--chip-font-size);
+  font-weight: 500;
+  color: var(--chip-text-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chip:hover {
+  background: var(--chip-bg-hover);
+  border-color: #999;
+}
+
+/* --------------------------------------------------------------------------
+   Chip Modifiers
+   -------------------------------------------------------------------------- */
+
+/* Borderless variant - for sidebar style */
+.chip--borderless {
+  border: none;
+}
+
+.chip--borderless:hover {
+  border: none;
+}
+
+/* Task variant - for task triggers */
+.chip--task {
+  background: var(--chip-bg);
+  border-color: var(--chip-border-color);
+  color: var(--chip-text-color);
+}
+
+.chip--task:hover {
+  background: var(--chip-bg-hover);
+}
+
+.chip--task .task-arrow {
+  color: #5E7A3C;
+  font-weight: 600;
+}
+
+/* Small variant - smaller padding for initial chips */
+.chip--sm {
+  padding: 8px 16px;
+}
+
+/* Staggered animation classes */
+.chip--stagger-1 { animation-delay: 0.1s; }
+.chip--stagger-2 { animation-delay: 0.15s; }
+.chip--stagger-3 { animation-delay: 0.2s; }
+.chip--stagger-4 { animation-delay: 0.25s; }
+.chip--stagger-5 { animation-delay: 0.3s; }
+.chip--stagger-6 { animation-delay: 0.35s; }
+.chip--stagger-7 { animation-delay: 0.4s; }
+.chip--stagger-8 { animation-delay: 0.45s; }
+
+/* ==========================================================================
+   Page Layout
+   ========================================================================== */
+
 .v5-page {
   display: flex;
   flex-direction: column;
@@ -123,20 +213,22 @@
   max-width: 560px;
 }
 
+/* v5-chip: Extends base .chip with --sm modifier and entrance animation
+   Used for initial prompts in empty state */
 .v5-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  border: 1px solid #E1E1E6;
-  border-radius: 12px;
-  background: #F5F5F8;
+  padding: 8px 16px; /* Uses --sm sizing */
+  border: 1px solid var(--chip-border-color);
+  border-radius: var(--chip-radius);
+  background: var(--chip-bg);
   font-family: "DM Sans", sans-serif;
-  font-size: 14px;
+  font-size: var(--chip-font-size);
   font-weight: 500;
-  color: #333333;
+  color: var(--chip-text-color);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   opacity: 0;
   animation: fadeInUp 0.4s ease forwards;
 }
@@ -156,13 +248,13 @@
 }
 
 .v5-chip.is-task {
-  background: #F5F5F8;
-  border-color: #E1E1E6;
-  color: #333333;
+  background: var(--chip-bg);
+  border-color: var(--chip-border-color);
+  color: var(--chip-text-color);
 }
 
 .v5-chip.is-task:hover {
-  background: #EBEBEF;
+  background: var(--chip-bg-hover);
 }
 
 .v5-chip .task-arrow {
@@ -224,10 +316,10 @@
 
 .v5-q-text {
   padding: 12px 16px;
-  background: #F5F5F8;
-  border-radius: 12px;
+  background: var(--chip-bg);
+  border-radius: var(--chip-radius);
   font-family: "DM Sans", sans-serif;
-  font-size: 14px;
+  font-size: var(--chip-font-size);
   font-weight: 500;
 }
 
@@ -308,8 +400,21 @@
   cursor: default;
 }
 
+.v5-choice.is-loading {
+  background: #EBEBEF;
+  border-color: #999;
+}
+
 .v5-choice .icon {
   font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.v5-choice .icon .spin {
+  width: 18px;
+  height: 18px;
 }
 
 /* Dentists */
@@ -351,7 +456,7 @@
   font-family: "DM Sans", sans-serif;
   font-size: 13px;
   font-weight: 500;
-  color: #2E7D32;
+  color: #333333;
 }
 
 .v5-dentist button {
@@ -368,6 +473,19 @@
 
 .v5-dentist button:disabled {
   opacity: 0.5;
+}
+
+.v5-dentist.is-loading {
+  background: #EBEBEF;
+  border-color: #999;
+}
+
+.v5-dentist button .spin {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  border-color: rgba(255,255,255,0.3);
+  border-top-color: #FFF;
 }
 
 /* Progress */
@@ -394,13 +512,13 @@
 }
 
 .v5-step.done .icon {
-  background: #2E7D32;
+  background: #333333;
   color: #FFF;
 }
 
 .v5-step.working .icon {
-  background: #E3F2FD;
-  color: #1976D2;
+  background: #EBEBEF;
+  color: #333;
 }
 
 .v5-step.pending .icon {
@@ -422,8 +540,8 @@
 .spin {
   width: 12px;
   height: 12px;
-  border: 2px solid #E3F2FD;
-  border-top-color: #1976D2;
+  border: 2px solid #E1E1E6;
+  border-top-color: #333;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   display: inline-block;
@@ -435,15 +553,15 @@
 
 /* Confirmation */
 .v5-confirm-card {
-  background: #F0FDF4;
-  border-color: #BBF7D0;
+  background: #F5F5F8;
+  border-color: #E1E1E6;
 }
 
 .v5-confirm-card .title {
   font-family: "DM Sans", sans-serif;
   font-size: 18px;
   font-weight: 600;
-  color: #166534;
+  color: #1F1F1F;
   text-align: center;
 }
 
@@ -479,7 +597,7 @@
 
 .v5-confirm-card .actions button {
   padding: 10px 14px;
-  border: 1px solid #BBF7D0;
+  border: 1px solid #E1E1E6;
   border-radius: 10px;
   background: #FFF;
   font-family: "DM Sans", sans-serif;
@@ -488,14 +606,25 @@
 }
 
 .v5-confirm-card .actions button:hover {
-  background: #DCFCE7;
+  background: #EBEBEF;
+}
+
+.v5-confirm-card .actions button.is-loading {
+  background: #EBEBEF;
+  border-color: #999;
+  pointer-events: none;
+}
+
+.v5-confirm-card .actions button .spin {
+  width: 14px;
+  height: 14px;
 }
 
 /* Next steps footer for confirmation cards */
 .v5-next-steps {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #D1FAE5;
+  border-top: 1px solid #E1E1E6;
 }
 
 .v5-next-label {
@@ -513,19 +642,21 @@
   flex-wrap: wrap;
 }
 
+/* v5-next-chip: Pill-shaped variant for "What's next?" footer
+   Intentionally distinct shape (20px radius) from standard chips */
 .v5-next-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  border: 1px solid #E1E1E6;
-  border-radius: 20px;
+  border: 1px solid var(--chip-border-color);
+  border-radius: 20px; /* Intentional pill shape - keep separate */
   background: #FFF;
   font-family: "DM Sans", sans-serif;
   font-size: 13px;
-  color: #333;
+  color: var(--chip-text-color);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .v5-next-chip:hover {
@@ -534,13 +665,24 @@
 }
 
 .v5-next-chip.is-task {
-  background: #F5F5F8;
-  border-color: #E1E1E6;
-  color: #333333;
+  background: var(--chip-bg);
+  border-color: var(--chip-border-color);
+  color: var(--chip-text-color);
 }
 
 .v5-next-chip.is-task:hover {
+  background: var(--chip-bg-hover);
+}
+
+.v5-next-chip.is-loading {
   background: #EBEBEF;
+  border-color: #999;
+  pointer-events: none;
+}
+
+.v5-next-chip .spin {
+  width: 14px;
+  height: 14px;
 }
 
 .v5-next-chip .task-arrow {
@@ -597,6 +739,17 @@
 
 .v5-form .submit:disabled {
   opacity: 0.4;
+}
+
+.v5-form .submit.is-loading {
+  opacity: 1;
+}
+
+.v5-form .submit .spin {
+  width: 16px;
+  height: 16px;
+  border-color: rgba(255,255,255,0.3);
+  border-top-color: #FFF;
 }
 
 /* Restart */
@@ -661,11 +814,11 @@
   position: absolute;
   left: 50%;
   bottom: 18px;
-  transform: translateX(-50%) translateY(24px);
+  transform: translateX(-50%) translateY(30px);
   display: flex;
   align-items: center;
   gap: 10px;
-  width: min(640px, calc(100% - 80px));
+  width: min(560px, calc(100% - 80px));
   padding: 10px 12px;
   border-radius: 24px;
   border: 1px solid #E1E1E6;
@@ -673,7 +826,7 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   opacity: 0;
   pointer-events: none;
-  transition: transform 0.4s ease, opacity 0.4s ease;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
   z-index: 12;
 }
 
@@ -718,18 +871,20 @@
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  width: 28px;
-  height: 64px;
-  border-radius: 12px 0 0 12px;
-  border: 1px solid #E1E1E6;
+  width: 20px;
+  height: 48px;
+  min-height: 44px; /* Maintain accessible touch target */
+  border-radius: 8px 0 0 8px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
   border-right: none;
-  background: #F5F5F8;
+  background: rgba(0, 0, 0, 0.02);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #666666;
+  color: rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: all 0.2s ease;
+  opacity: 0.3;
+  transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
   z-index: 6;
 }
 
@@ -738,13 +893,15 @@
 }
 
 .v5-rail-handle:hover {
-  background: #EBEBEF;
-  color: #4C4C4C;
+  opacity: 1;
+  background: var(--chip-bg-hover);
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .v5-rail-arrow {
-  font-size: 18px;
+  font-size: 14px;
   line-height: 1;
+  font-weight: 300;
 }
 
 .v5-sidebar.is-revealed {
@@ -789,32 +946,33 @@
   display: none;
 }
 
+/* v5-sidebar-btn: Extends base .chip with --borderless modifier
+   Used for sidebar follow-up questions */
 .v5-sidebar-btn {
   display: flex;
   padding: 12px 16px;
   align-items: center;
   gap: 10px;
-  border: none;
-  border-radius: 12px;
-  background: #F5F5F8;
+  border: none; /* --borderless modifier */
+  border-radius: var(--chip-radius);
+  background: var(--chip-bg);
   font-family: "DM Sans", sans-serif;
-  font-size: 14px;
+  font-size: var(--chip-font-size);
   font-weight: 500;
   line-height: 20px;
   text-align: left;
-  color: #1F1F1F;
+  color: var(--chip-text-color);
   cursor: pointer;
   transition: background 0.2s ease, opacity 0.3s ease, transform 0.3s ease;
 }
 
-
 .v5-sidebar-btn.is-task {
-  background: #F5F5F8;
-  border: 1px solid #E1E1E6;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border-color);
 }
 
 .v5-sidebar-btn.is-task:hover {
-  background: #EBEBEF;
+  background: var(--chip-bg-hover);
 }
 
 .v5-sidebar-btn .task-arrow {
@@ -847,7 +1005,7 @@
 }
 
 .v5-sidebar-btn:hover:not(.disabled) {
-  background: #EBEBEF;
+  background: var(--chip-bg-hover);
 }
 
 .v5-sidebar-btn.disabled {
@@ -862,9 +1020,9 @@
   flex-direction: column;
   gap: 4px;
   padding: 12px 16px;
-  background: #F5F5F8;
-  border: 1px solid #E1E1E6;
-  border-radius: 12px;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border-color);
+  border-radius: var(--chip-radius);
   margin-bottom: 8px;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease;
@@ -872,7 +1030,7 @@
 }
 
 .v5-paused-task:hover {
-  background: #EBEBEF;
+  background: var(--chip-bg-hover);
   border-color: #C5C5CC;
 }
 
@@ -949,6 +1107,14 @@
   vertical-align: text-bottom;
 }
 
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Keyframe Definitions
+   -------------------------------------------------------------------------- */
+
 @keyframes blink {
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
@@ -965,6 +1131,49 @@
   }
 }
 
+/* Exit animations - quick (0.15s) for snappy feel */
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sidebarHide {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+
+@keyframes slideDownFadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+}
+
 @keyframes sidebarReveal {
   from {
     opacity: 0;
@@ -974,6 +1183,278 @@
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* --------------------------------------------------------------------------
+   Exit Animation Classes
+   All exit animations use var(--exit-duration) for consistent timing
+   -------------------------------------------------------------------------- */
+.v5-empty.is-exiting {
+  animation: fadeOutDown var(--exit-duration) ease forwards;
+}
+
+.v5-chip.is-exiting {
+  animation: fadeOut var(--exit-duration) ease forwards;
+}
+
+.v5-sidebar.is-exiting {
+  animation: sidebarHide var(--exit-duration) ease forwards;
+}
+
+.v5-sidebar-btn.is-exiting {
+  animation: fadeOut var(--exit-duration) ease forwards;
+}
+
+.v5-restart.is-exiting {
+  animation: slideDownFadeOut var(--exit-duration) ease forwards;
+}
+
+.v5-task-card.is-exiting {
+  animation: fadeOut var(--exit-duration) ease forwards;
+}
+
+/* -------------------------------------------------------------------------
+   Restart Animations - Smooth exit when returning to initial state
+   Uses longer duration and momentum-based easing for polished feel
+   -------------------------------------------------------------------------- */
+@keyframes fadeToWhite {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(40px);
+  }
+}
+
+@keyframes slideOutDownRestart {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(30px);
+  }
+}
+
+/* Conversation fades through white */
+.v5-conversation.is-restarting {
+  animation: fadeToWhite 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Sidebar slides out to the right with momentum */
+.v5-sidebar.is-restarting {
+  animation: slideOutRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Composer slides down and fades */
+.v5-composer.is-restarting {
+  animation: slideOutDown 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Restart button slides down */
+.v5-restart.is-restarting {
+  animation: slideOutDownRestart 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+/* Hamburger menu button - hidden on desktop */
+.v5-hamburger {
+  display: none;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #E1E1E6;
+  border-radius: 10px;
+  background: #FFF;
+  cursor: pointer;
+  z-index: 15;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.2s ease;
+}
+
+.v5-hamburger:hover {
+  background: #F5F5F8;
+}
+
+.v5-hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: #333;
+  border-radius: 1px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.v5-hamburger.is-open span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.v5-hamburger.is-open span:nth-child(2) {
+  opacity: 0;
+}
+
+.v5-hamburger.is-open span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Mobile backdrop */
+.v5-sidebar-backdrop {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 19;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.v5-sidebar-backdrop.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   Skeleton Loading Components
+   ========================================================================== */
+
+/* Base skeleton with shimmer animation */
+.skeleton {
+  background: linear-gradient(90deg, #F5F5F8 25%, #EBEBEF 50%, #F5F5F8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* --------------------------------------------------------------------------
+   Skeleton Variants
+   -------------------------------------------------------------------------- */
+
+/* Text line skeleton */
+.skeleton--text {
+  height: 16px;
+  width: 100%;
+}
+
+/* Title skeleton */
+.skeleton--title {
+  height: 24px;
+  width: 60%;
+}
+
+/* Card skeleton */
+.skeleton--card {
+  height: 120px;
+  width: 100%;
+}
+
+/* Button skeleton */
+.skeleton--button {
+  height: 44px;
+  width: 120px;
+}
+
+/* --------------------------------------------------------------------------
+   Card Loading State
+   -------------------------------------------------------------------------- */
+
+/* Task card loading state - shows skeleton placeholder */
+.v5-task-card.is-loading {
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+
+.v5-task-card.is-loading .skeleton {
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Step Loading Enhancement
+   -------------------------------------------------------------------------- */
+
+/* Pulse effect for working step */
+.v5-step.working {
+  animation: stepPulse 2s ease-in-out infinite;
+}
+
+@keyframes stepPulse {
+  0%, 100% {
+    background: transparent;
+  }
+  50% {
+    background: rgba(25, 118, 210, 0.04);
+  }
+}
+
+/* Enhanced working step icon with glow */
+.v5-step.working .icon {
+  box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.15);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Working step text emphasis */
+.v5-step.working .text {
+  color: #333;
+  font-weight: 500;
+}
+
+/* Pending step - muted appearance */
+.v5-step.pending {
+  opacity: 0.6;
+}
+
+.v5-step.pending .text {
+  color: #86878F;
+}
+
+/* Done step - clear completion state */
+.v5-step.done .text {
+  color: #333333;
+}
+
+/* Progress card working state - subtle background */
+.v5-progress-card.is-working {
+  background: linear-gradient(180deg, #FAFCFF 0%, #F5F8FF 100%);
+  border-color: rgba(25, 118, 210, 0.2);
 }
 
 /* Mobile responsive */
@@ -994,6 +1475,7 @@
   .v5-card {
     flex-direction: column;
     min-height: auto;
+    position: relative;
   }
 
   .v5-main {
@@ -1005,10 +1487,34 @@
     right: 0;
   }
 
+  /* Show hamburger on mobile */
+  .v5-hamburger {
+    display: flex;
+  }
+
+  /* Show backdrop on mobile */
+  .v5-sidebar-backdrop {
+    display: block;
+  }
+
+  /* Sidebar as overlay on mobile */
   .v5-sidebar {
-    width: 100%;
-    border-left: none;
-    border-top: 1px solid #E1E1E6;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 85%;
+    border-left: 1px solid #E1E1E6;
+    border-top: none;
+    z-index: 20;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .v5-sidebar.mobile-open {
+    transform: translateX(0);
   }
 
   .v5-rail-handle {
@@ -1027,5 +1533,10 @@
 
   .v5-entry {
     width: 100%;
+  }
+
+  /* Adjust restart button position when sidebar is open */
+  .v5-restart {
+    z-index: 5;
   }
 }

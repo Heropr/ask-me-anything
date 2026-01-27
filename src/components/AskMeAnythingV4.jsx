@@ -9,7 +9,8 @@ import policyIcon from '../assets/icons/certificate-02.svg';
 import medicalIcon from '../assets/icons/medical-cross.svg';
 
 const SIDEBAR_UPDATE_DELAY = 500;
-const COMPOSER_REVEAL_DELAY = 200;
+const SIDEBAR_ANIMATION_DURATION = 350;
+const COMPOSER_REVEAL_DELAY = SIDEBAR_ANIMATION_DURATION + 100; // After sidebar finishes animating
 
 const dentists = [
   { id: 1, name: "Dr. Sarah Chen", distance: "0.8 mi", rating: 4.9, nextSlot: "Today 2:00 PM", address: "123 Main St, Austin TX" },
@@ -215,9 +216,22 @@ function AskMeAnythingV5() {
   const [sidebarLockedClosed, setSidebarLockedClosed] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
   const [draftQuestion, setDraftQuestion] = useState('');
+  const [isRestarting, setIsRestarting] = useState(false);
+
+  // Mobile state
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const convRef = useRef(null);
   const activeRef = useRef(null);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (activeRef.current && convRef.current) {
@@ -284,7 +298,7 @@ function AskMeAnythingV5() {
       } else {
         setDisplayedWords(current);
       }
-    }, 105);
+    }, 32); // 70% faster than original 105ms
 
     return () => {
       if (streamInterval.current) clearInterval(streamInterval.current);
@@ -306,15 +320,36 @@ function AskMeAnythingV5() {
   }, [streamingIndex]);
 
   useEffect(() => {
-    if (!conversation.length || streamingIndex !== null || sidebarLockedClosed) {
+    // No conversation yet - don't show sidebar
+    if (!conversation.length) {
       setShowSidebar(false);
       setSidebarRevealDone(false);
       return;
     }
+    // User manually closed sidebar - respect that
+    if (sidebarLockedClosed) {
+      setShowSidebar(false);
+      setSidebarRevealDone(false);
+      return;
+    }
+    // Check if there are any questions to show (either follow-ups or sidebar questions)
+    const sidebarQs = getSidebarQuestions();
+    const hasQuestions = currentFollowUps.length > 0 || sidebarQs.length > 0;
+
+    // No questions to show - collapse sidebar
+    if (!hasQuestions && showSidebar) {
+      setShowSidebar(false);
+      setSidebarRevealDone(false);
+      return;
+    }
+    if (!hasQuestions) return;
+    // Already showing - keep it visible (don't hide during streaming)
     if (showSidebar) return;
+    // First time showing - wait for streaming to complete, then reveal
+    if (streamingIndex !== null) return;
     const timer = setTimeout(() => setShowSidebar(true), SIDEBAR_UPDATE_DELAY);
     return () => clearTimeout(timer);
-  }, [conversation.length, streamingIndex, showSidebar, sidebarLockedClosed]);
+  }, [conversation.length, streamingIndex, showSidebar, sidebarLockedClosed, currentFollowUps, mode, taskState, currentTopic, completedTasks]);
 
   useEffect(() => {
     if (!showSidebar) {
@@ -428,6 +463,9 @@ function AskMeAnythingV5() {
 
   // Handle sidebar question click (works in both modes)
   const handleSidebarQuestion = (item) => {
+    // Close mobile menu when a question is selected
+    setMobileMenuOpen(false);
+
     // Don't reload if clicking the same question that's already selected
     if (item.text === askedQuestion) {
       return;
@@ -991,35 +1029,59 @@ function AskMeAnythingV5() {
   };
 
   const restart = () => {
-    setConversation([]);
-    setMode('explore');
-    setTaskState(null);
-    setCurrentTopic('initial');
-    setActiveEntry(0);
-    setStreamingIndex(null);
-    setDisplayedWords(0);
-    setAskedQuestion(null);
-    setPreviousFollowUps(null);
-    setCurrentFollowUps([]);
-    setPausedTask(null);
-    setShowSidebar(false);
-    setSidebarLockedClosed(false);
-    setShowComposer(false);
-    if (followUpDelayTimer.current) {
-      clearTimeout(followUpDelayTimer.current);
-      followUpDelayTimer.current = null;
-    }
-    if (composerDelayTimer.current) {
-      clearTimeout(composerDelayTimer.current);
-      composerDelayTimer.current = null;
-    }
-    // Keep completedTasks - unlocked actions persist across conversations
-    if (streamInterval.current) clearInterval(streamInterval.current);
+    // Already restarting - ignore
+    if (isRestarting) return;
+
+    // Trigger exit animations
+    setIsRestarting(true);
+
+    // Wait for animations to complete, then clear state
+    setTimeout(() => {
+      setConversation([]);
+      setMode('explore');
+      setTaskState(null);
+      setCurrentTopic('initial');
+      setActiveEntry(0);
+      setStreamingIndex(null);
+      setDisplayedWords(0);
+      setAskedQuestion(null);
+      setPreviousFollowUps(null);
+      setCurrentFollowUps([]);
+      setPausedTask(null);
+      setShowSidebar(false);
+      setSidebarLockedClosed(false);
+      setShowComposer(false);
+      setMobileMenuOpen(false);
+      if (followUpDelayTimer.current) {
+        clearTimeout(followUpDelayTimer.current);
+        followUpDelayTimer.current = null;
+      }
+      if (composerDelayTimer.current) {
+        clearTimeout(composerDelayTimer.current);
+        composerDelayTimer.current = null;
+      }
+      // Keep completedTasks - unlocked actions persist across conversations
+      if (streamInterval.current) clearInterval(streamInterval.current);
+
+      // Reset restarting state after a brief moment
+      setTimeout(() => setIsRestarting(false), 50);
+    }, 400); // Match animation duration
   };
 
   const sidebarQuestions = getSidebarQuestions();
   const hasConversation = conversation.length > 0;
   const isSidebarOpen = showSidebar && !sidebarLockedClosed;
+
+  // Mobile hamburger toggle
+  const handleMobileMenuToggle = () => {
+    setMobileMenuOpen(prev => !prev);
+  };
+
+  // Close mobile menu when clicking backdrop
+  const handleBackdropClick = () => {
+    setMobileMenuOpen(false);
+  };
+
   const handleSidebarToggle = () => {
     if (isSidebarOpen) {
       setSidebarLockedClosed(true);
@@ -1050,6 +1112,25 @@ function AskMeAnythingV5() {
       </div>
 
       <div className={`v5-card ${isSidebarOpen ? 'sidebar-visible' : 'sidebar-hidden'}`}>
+        {/* Mobile hamburger button */}
+        {hasConversation && (
+          <button
+            className={`v5-hamburger ${mobileMenuOpen ? 'is-open' : ''}`}
+            onClick={handleMobileMenuToggle}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        )}
+
+        {/* Mobile backdrop */}
+        <div
+          className={`v5-sidebar-backdrop ${mobileMenuOpen ? 'is-visible' : ''}`}
+          onClick={handleBackdropClick}
+        />
+
         <div className="v5-main">
           {!hasConversation ? (
             <div className="v5-empty">
@@ -1058,7 +1139,7 @@ function AskMeAnythingV5() {
                 {exploreQuestions.initial.map((item, i) => (
                   <button
                     key={i}
-                    className={`v5-chip ${item.isTask ? 'is-task' : ''}`}
+                    className={`chip chip--sm chip--stagger-${i + 1} v5-chip ${item.isTask ? 'chip--task is-task' : ''}`}
                     onClick={() => item.isTask ? handleSidebarQuestion(item) : handleExploreQuestion(item.text)}
                   >
                     {item.isTask && <img src={getTaskIcon(item.text)} alt="" className="task-icon" />}
@@ -1068,7 +1149,7 @@ function AskMeAnythingV5() {
               </div>
             </div>
           ) : (
-            <div className="v5-conversation" ref={convRef}>
+            <div className={`v5-conversation ${isRestarting ? 'is-restarting' : ''}`} ref={convRef}>
               {conversation.map((entry, index) => (
                 <div
                   key={entry.id}
@@ -1110,15 +1191,30 @@ function AskMeAnythingV5() {
             </div>
           )}
           {hasConversation && (
-            <button className={`v5-restart ${showComposer ? 'has-composer' : ''}`} onClick={restart}>
+            <button className={`v5-restart ${showComposer ? 'has-composer' : ''} ${isRestarting ? 'is-restarting' : ''}`} onClick={restart}>
               <img src={refreshCwIcon} alt="" />
               <span>Restart conversation</span>
             </button>
           )}
+          {hasConversation && (
+            <form
+              className={`v5-composer ${showComposer ? 'is-visible' : ''} ${isRestarting ? 'is-restarting' : ''}`}
+              onSubmit={handleSubmitQuestion}
+            >
+              <input
+                type="text"
+                placeholder="Ask a question..."
+                value={draftQuestion}
+                onChange={(event) => setDraftQuestion(event.target.value)}
+                aria-label="Ask a question"
+              />
+              <button type="submit">Send</button>
+            </form>
+          )}
         </div>
 
-        {isSidebarOpen && hasConversation && (
-          <div className={`v5-sidebar ${sidebarRevealDone ? '' : 'is-revealed'} ${mode === 'task' ? 'task-mode' : ''} ${streamingIndex !== null ? 'dimmed' : ''}`}>
+        {(isSidebarOpen || mobileMenuOpen) && hasConversation && (
+          <div className={`v5-sidebar ${sidebarRevealDone ? '' : 'is-revealed'} ${mode === 'task' ? 'task-mode' : ''} ${mobileMenuOpen ? 'mobile-open' : ''} ${isRestarting ? 'is-restarting' : ''}`}>
             {hasConversation && (
               <>
                 <div className="v5-sidebar-header">
@@ -1144,33 +1240,14 @@ function AskMeAnythingV5() {
               </button>
             )}
 
-              {streamingIndex !== null && previousFollowUps ? (
-                // During streaming: show previous follow-ups dimmed (no animation, no interaction)
-                previousFollowUps
-                  .filter(item => (typeof item === 'string' ? item : item.text) !== askedQuestion)
-                  .map((item, i) => (
-                  <div
-                    key={typeof item === 'string' ? item : item.text}
-                    className={`v5-sidebar-btn disabled ${(typeof item === 'object' && item.isTask) ? 'is-task' : ''}`}
-                  >
-                    {(typeof item === 'object' && item.isTask) && (
-                      <img
-                        src={getTaskIcon(typeof item === 'string' ? item : item.text)}
-                        alt=""
-                        className="task-icon"
-                      />
-                    )}
-                    {typeof item === 'string' ? item : item.text}
-                  </div>
-                ))
-              ) : currentFollowUps.length > 0 ? (
-                // After streaming: show follow-ups with stability-aware animation
+              {currentFollowUps.length > 0 ? (
+                // Show follow-ups - stays visible during streaming
                 currentFollowUps
                   .filter(item => item.text !== askedQuestion)
                   .map((item) => (
                   <button
                     key={item.text}
-                    className={`v5-sidebar-btn ${item.isTask ? 'is-task' : ''} ${item.isNew ? 'is-new' : 'is-stable'}`}
+                    className={`chip chip--borderless v5-sidebar-btn ${item.isTask ? 'chip--task is-task' : ''} ${item.isNew ? 'is-new' : 'is-stable'}`}
                     onClick={() => handleSidebarQuestion(item)}
                   >
                     {item.isTask && <img src={getTaskIcon(item.text)} alt="" className="task-icon" />}
@@ -1182,7 +1259,7 @@ function AskMeAnythingV5() {
                 sidebarQuestions.map((item, i) => (
                 <button
                   key={i}
-                  className={`v5-sidebar-btn ${item.isTask ? 'is-task' : ''}`}
+                  className={`chip chip--borderless v5-sidebar-btn ${item.isTask ? 'chip--task is-task' : ''}`}
                   onClick={() => handleSidebarQuestion(item)}
                 >
                   {item.isTask && <img src={getTaskIcon(item.text)} alt="" className="task-icon" />}
@@ -1204,23 +1281,118 @@ function AskMeAnythingV5() {
             <span className="v5-rail-arrow">{isSidebarOpen ? '›' : '‹'}</span>
           </button>
         )}
-        {hasConversation && (
-          <form
-            className={`v5-composer ${showComposer ? 'is-visible' : ''}`}
-            onSubmit={handleSubmitQuestion}
-          >
-            <input
-              type="text"
-              placeholder="Ask a question..."
-              value={draftQuestion}
-              onChange={(event) => setDraftQuestion(event.target.value)}
-              aria-label="Ask a question"
-            />
-            <button type="submit">Send</button>
-          </form>
-        )}
       </div>
     </div>
+  );
+}
+
+function DentistCard({ dentist, onBook, disabled }) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = () => {
+    setIsLoading(true);
+    onBook(dentist);
+  };
+
+  return (
+    <div className={`v5-dentist ${isLoading ? 'is-loading' : ''}`}>
+      <div className="info">
+        <div className="name">{dentist.name}</div>
+        <div className="meta">⭐ {dentist.rating} · {dentist.distance}</div>
+        <div className="slot">{dentist.nextSlot}</div>
+      </div>
+      <button onClick={handleClick} disabled={disabled || isLoading}>
+        {isLoading ? <span className="spin" /> : 'Book'}
+      </button>
+    </div>
+  );
+}
+
+function ChoiceButton({ choice, onChoice, disabled }) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = () => {
+    setIsLoading(true);
+    onChoice(choice);
+  };
+
+  return (
+    <button
+      className={`v5-choice ${isLoading ? 'is-loading' : ''}`}
+      onClick={handleClick}
+      disabled={disabled || isLoading}
+    >
+      {isLoading ? (
+        <span className="icon"><span className="spin" /></span>
+      ) : (
+        <span className="icon">{choice.icon}</span>
+      )}
+      <span>{choice.label}</span>
+    </button>
+  );
+}
+
+function ActionButton({ action, onAction }) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = () => {
+    setIsLoading(true);
+    onAction(action);
+  };
+
+  return (
+    <button
+      className={isLoading ? 'is-loading' : ''}
+      onClick={handleClick}
+      disabled={isLoading}
+    >
+      {isLoading ? <span className="spin" /> : action.label}
+    </button>
+  );
+}
+
+function NextStepChip({ step, onNextStep, getTaskIcon }) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = () => {
+    setIsLoading(true);
+    onNextStep(step);
+  };
+
+  return (
+    <button
+      className={`v5-next-chip ${step.isTask ? 'is-task' : ''} ${isLoading ? 'is-loading' : ''}`}
+      onClick={handleClick}
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <span className="spin" />
+      ) : (
+        <>
+          {step.isTask && <img src={getTaskIcon(step.text)} alt="" className="task-icon" />}
+          {step.text}
+        </>
+      )}
+    </button>
+  );
+}
+
+function FormSubmitButton({ onSubmit, disabled, children }) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = () => {
+    setIsLoading(true);
+    onSubmit();
+  };
+
+  return (
+    <button
+      className={`submit ${isLoading ? 'is-loading' : ''}`}
+      onClick={handleClick}
+      disabled={disabled || isLoading}
+    >
+      {isLoading ? <span className="spin" /> : children}
+    </button>
   );
 }
 
@@ -1233,10 +1405,7 @@ function TaskCard({ entry, onChoice, onBook, onForm, onAction, onNextStep, disab
         <div className="v5-task-prompt">{entry.prompt}</div>
         <div className="v5-choices">
           {entry.choices.map(c => (
-            <button key={c.id} className="v5-choice" onClick={() => onChoice(c)} disabled={disabled}>
-              <span className="icon">{c.icon}</span>
-              <span>{c.label}</span>
-            </button>
+            <ChoiceButton key={c.id} choice={c} onChoice={onChoice} disabled={disabled} />
           ))}
         </div>
       </div>
@@ -1249,14 +1418,7 @@ function TaskCard({ entry, onChoice, onBook, onForm, onAction, onNextStep, disab
         <div className="v5-task-prompt">{entry.prompt}</div>
         <div className="v5-dentists">
           {entry.dentists.map(d => (
-            <div key={d.id} className="v5-dentist">
-              <div className="info">
-                <div className="name">{d.name}</div>
-                <div className="meta">⭐ {d.rating} · {d.distance}</div>
-                <div className="slot">{d.nextSlot}</div>
-              </div>
-              <button onClick={() => onBook(d)} disabled={disabled}>Book</button>
-            </div>
+            <DentistCard key={d.id} dentist={d} onBook={onBook} disabled={disabled} />
           ))}
         </div>
       </div>
@@ -1293,7 +1455,7 @@ function TaskCard({ entry, onChoice, onBook, onForm, onAction, onNextStep, disab
         </div>
         <div className="actions">
           {entry.actions.map(a => (
-            <button key={a.id} onClick={() => onAction(a)}>{a.label}</button>
+            <ActionButton key={a.id} action={a} onAction={onAction} />
           ))}
         </div>
         {entry.nextSteps && entry.nextSteps.length > 0 && (
@@ -1301,14 +1463,7 @@ function TaskCard({ entry, onChoice, onBook, onForm, onAction, onNextStep, disab
             <span className="v5-next-label">What's next?</span>
             <div className="v5-next-chips">
               {entry.nextSteps.map((step, i) => (
-                <button
-                  key={i}
-                  className={`v5-next-chip ${step.isTask ? 'is-task' : ''}`}
-                  onClick={() => onNextStep(step)}
-                >
-                  {step.isTask && <img src={getTaskIcon(step.text)} alt="" className="task-icon" />}
-                  {step.text}
-                </button>
+                <NextStepChip key={i} step={step} onNextStep={onNextStep} getTaskIcon={getTaskIcon} />
               ))}
             </div>
           </div>
@@ -1345,9 +1500,9 @@ function TaskCard({ entry, onChoice, onBook, onForm, onAction, onNextStep, disab
               )}
             </div>
           ))}
-          <button className="submit" onClick={() => onForm(formData)} disabled={disabled || !ready}>
+          <FormSubmitButton onSubmit={() => onForm(formData)} disabled={disabled || !ready}>
             Add to plan
-          </button>
+          </FormSubmitButton>
         </div>
       </div>
     );
