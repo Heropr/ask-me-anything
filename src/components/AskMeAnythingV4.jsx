@@ -8,7 +8,7 @@ import calendarIcon from '../assets/icons/calendar-date.svg';
 import policyIcon from '../assets/icons/certificate-02.svg';
 import medicalIcon from '../assets/icons/medical-cross.svg';
 
-const SIDEBAR_UPDATE_DELAY = 500;
+const SIDEBAR_UPDATE_DELAY = 150;
 const SIDEBAR_ANIMATION_DURATION = 350;
 const COMPOSER_REVEAL_DELAY = SIDEBAR_ANIMATION_DURATION + 100; // After sidebar finishes animating
 
@@ -221,6 +221,8 @@ function AskMeAnythingV5() {
   // Mobile state
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showInitialSearch, setShowInitialSearch] = useState(false);
+  const [initialSearchQuery, setInitialSearchQuery] = useState('');
 
   const convRef = useRef(null);
   const activeRef = useRef(null);
@@ -1147,6 +1149,34 @@ function AskMeAnythingV5() {
                   </button>
                 ))}
               </div>
+              {!showInitialSearch && (
+                <button
+                  className="v5-different-question-link"
+                  onClick={() => setShowInitialSearch(true)}
+                >
+                  Ask a different question...
+                </button>
+              )}
+              <form
+                className={`v5-initial-search ${showInitialSearch ? 'is-visible' : ''}`}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (initialSearchQuery.trim()) {
+                    handleExploreQuestion(initialSearchQuery.trim());
+                    setShowInitialSearch(false);
+                    setInitialSearchQuery('');
+                  }
+                }}
+              >
+                <input
+                  type="text"
+                  placeholder="Type your question..."
+                  value={initialSearchQuery}
+                  onChange={(e) => setInitialSearchQuery(e.target.value)}
+                  autoFocus
+                />
+                <button type="submit">Ask</button>
+              </form>
             </div>
           ) : (
             <div className={`v5-conversation ${isRestarting ? 'is-restarting' : ''}`} ref={convRef}>
