@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import './AskMeAnythingV3.css';
 import refreshCwIcon from '../assets/icons/refresh-cw.svg';
 import menuIcon from '../assets/icons/menu.svg';
+import chevronLeftIcon from '../assets/icons/chevron-left.svg';
+import messageCircleIcon from '../assets/icons/message-circle.svg';
 
 const suggestionQuestions = [
   "What is Smirk?",
@@ -270,6 +272,7 @@ function AskMeAnythingV3() {
   const [streamingIndex, setStreamingIndex] = useState(null);
   const [displayedWords, setDisplayedWords] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showPrevious, setShowPrevious] = useState(false);
   const activeEntryRef = useRef(null);
   const conversationRef = useRef(null);
   const streamInterval = useRef(null);
@@ -280,6 +283,7 @@ function AskMeAnythingV3() {
     setStreamingIndex(null);
     setDisplayedWords(0);
     setSidebarOpen(false);
+    setShowPrevious(false);
     if (streamInterval.current) clearInterval(streamInterval.current);
   };
 
@@ -315,7 +319,7 @@ function AskMeAnythingV3() {
       } else {
         setDisplayedWords(current);
       }
-    }, 50);
+    }, 75);
 
     return () => {
       if (streamInterval.current) clearInterval(streamInterval.current);
@@ -409,44 +413,97 @@ function AskMeAnythingV3() {
           )}
 
           {hasConversation && (
-            <button className="ama-v3-restart-btn" onClick={handleRestart}>
-              <img src={refreshCwIcon} alt="" />
-              <span>Restart conversation</span>
-            </button>
+            <div className="ama-v3-bottom-buttons">
+              <button className="ama-v3-chat-btn">
+                <img src={messageCircleIcon} alt="" />
+              </button>
+              <button className="ama-v3-restart-btn" onClick={handleRestart}>
+                <img src={refreshCwIcon} alt="" />
+                <span>Restart conversation</span>
+              </button>
+            </div>
           )}
         </div>
 
         <button
-          className={`ama-v3-menu-btn ${sidebarOpen ? 'sidebar-open' : ''}`}
-          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className={`ama-v3-menu-btn ${sidebarOpen ? 'sidebar-open' : ''} ${!hasConversation ? 'disabled' : ''}`}
+          onClick={() => hasConversation && setSidebarOpen(!sidebarOpen)}
+          disabled={!hasConversation}
         >
           <img src={menuIcon} alt="Menu" />
         </button>
 
         <div className={`ama-v3-sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="ama-v3-sidebar-content">
-          {hasConversation && (
-            <div className="ama-v3-sidebar-questions" key={activeIndex}>
-              {streamingIndex !== null ? (
-                Array.from({ length: 8 }).map((_, index) => (
-                  <div key={index} className="ama-v3-followup-skeleton">
-                    <div className="ama-v3-skeleton-line" />
-                    {index % 2 === 0 && <div className="ama-v3-skeleton-line short" />}
-                  </div>
-                ))
-              ) : (
-                getFollowUps(activeQuestion).map((question, index) => (
+            {hasConversation && (
+              <>
+                {showPrevious && (
                   <button
-                    key={index}
-                    className="ama-v3-followup-btn"
-                    onClick={() => handleQuestionClick(question)}
+                    className="ama-v3-back-header"
+                    onClick={() => setShowPrevious(false)}
                   >
-                    {question}
+                    <img src={chevronLeftIcon} alt="" />
+                    <span>Question history</span>
                   </button>
-                ))
-              )}
-            </div>
-          )}
+                )}
+
+                {!showPrevious && (
+                  <div className="ama-v3-asked-header">
+                    <span className="ama-v3-asked-label">ASKED</span>
+                    {conversation.length > 1 && (
+                      <button
+                        className="ama-v3-show-previous-btn"
+                        onClick={() => setShowPrevious(true)}
+                      >
+                        Question history
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {showPrevious ? (
+                  <div className="ama-v3-previous-questions">
+                    {conversation.map((entry, index) => (
+                      <button
+                        key={index}
+                        className={`ama-v3-previous-question-btn ${index === activeIndex ? 'active' : ''}`}
+                        onClick={() => {
+                          setActiveIndex(index);
+                          setShowPrevious(false);
+                        }}
+                      >
+                        {entry.question}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <div className="ama-v3-asked-card">
+                      <p className="ama-v3-asked-question">{activeQuestion}</p>
+                    </div>
+
+                    <div className="ama-v3-sidebar-questions" key={activeIndex}>
+                      <span className="ama-v3-recommended-label">RECOMMENDED QUESTIONS</span>
+                      {streamingIndex !== null ? (
+                        Array.from({ length: 8 }).map((_, index) => (
+                          <div key={index} className="ama-v3-followup-skeleton" />
+                        ))
+                      ) : (
+                        getFollowUps(activeQuestion).map((question, index) => (
+                          <button
+                            key={index}
+                            className="ama-v3-followup-btn"
+                            onClick={() => handleQuestionClick(question)}
+                          >
+                            {question}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
