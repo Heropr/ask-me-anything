@@ -273,9 +273,12 @@ function AskMeAnythingV3() {
   const [displayedWords, setDisplayedWords] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPrevious, setShowPrevious] = useState(false);
+  const [showComposer, setShowComposer] = useState(false);
+  const [draftQuestion, setDraftQuestion] = useState('');
   const activeEntryRef = useRef(null);
   const conversationRef = useRef(null);
   const streamInterval = useRef(null);
+  const composerInputRef = useRef(null);
 
   const handleRestart = () => {
     setConversation([]);
@@ -284,7 +287,36 @@ function AskMeAnythingV3() {
     setDisplayedWords(0);
     setSidebarOpen(false);
     setShowPrevious(false);
+    setShowComposer(false);
+    setDraftQuestion('');
     if (streamInterval.current) clearInterval(streamInterval.current);
+  };
+
+  const handleChatClick = () => {
+    setShowComposer(!showComposer);
+    // Focus input when opening
+    if (!showComposer) {
+      setTimeout(() => {
+        composerInputRef.current?.focus();
+      }, 100);
+    }
+  };
+
+  const handleComposerSubmit = (e) => {
+    e.preventDefault();
+    const question = draftQuestion.trim();
+    if (!question) return;
+
+    setDraftQuestion('');
+    setShowComposer(false);
+    handleQuestionClick(question);
+  };
+
+  const handleComposerKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      setShowComposer(false);
+      setDraftQuestion('');
+    }
   };
 
   const handleQuestionClick = (question) => {
@@ -331,25 +363,32 @@ function AskMeAnythingV3() {
     setActiveIndex(index);
   };
 
+  // Track previous conversation length to only auto-scroll on new entries
+  const prevConversationLength = useRef(0);
+
   useEffect(() => {
-    if (activeEntryRef.current && conversationRef.current) {
+    if (conversationRef.current) {
       const container = conversationRef.current;
-      const entry = activeEntryRef.current;
       const containerHeight = container.clientHeight;
-      const entryTop = entry.offsetTop;
-      const entryHeight = entry.offsetHeight;
-      const scrollTarget = entryTop - (containerHeight / 2) + (entryHeight / 2);
 
-      // Update top/bottom padding to allow centering any entry
-      const topPad = containerHeight / 2 - entryHeight / 2;
-      container.style.paddingTop = `${Math.max(topPad, 0)}px`;
-      container.style.paddingBottom = `${Math.max(topPad, 0)}px`;
+      // Set generous padding to allow scrolling to any entry
+      const padding = Math.max(containerHeight / 2, 200);
+      container.style.paddingTop = `${padding}px`;
+      container.style.paddingBottom = `${padding}px`;
 
-      setTimeout(() => {
-        const newEntryTop = entry.offsetTop;
-        const newScrollTarget = newEntryTop - (containerHeight / 2) + (entryHeight / 2);
-        container.scrollTo({ top: newScrollTarget, behavior: 'smooth' });
-      }, 10);
+      // Only auto-scroll when a new entry is added, not on manual navigation
+      const isNewEntry = conversation.length > prevConversationLength.current;
+      prevConversationLength.current = conversation.length;
+
+      if (isNewEntry && activeEntryRef.current) {
+        const entry = activeEntryRef.current;
+        setTimeout(() => {
+          const entryTop = entry.offsetTop;
+          const entryHeight = entry.offsetHeight;
+          const scrollTarget = entryTop - (containerHeight / 2) + (entryHeight / 2);
+          container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+        }, 10);
+      }
     }
   }, [conversation, activeIndex]);
 
@@ -413,15 +452,33 @@ function AskMeAnythingV3() {
           )}
 
           {hasConversation && (
-            <div className="ama-v3-bottom-buttons">
-              <button className="ama-v3-chat-btn">
-                <img src={messageCircleIcon} alt="" />
-              </button>
-              <button className="ama-v3-restart-btn" onClick={handleRestart}>
-                <img src={refreshCwIcon} alt="" />
-                <span>Restart conversation</span>
-              </button>
-            </div>
+            <>
+              <div className={`ama-v3-bottom-buttons ${showComposer ? 'composer-open' : ''}`}>
+                {!showComposer && (
+                  <button className="ama-v3-chat-btn" onClick={handleChatClick}>
+                    <img src={messageCircleIcon} alt="" />
+                  </button>
+                )}
+                <button className="ama-v3-restart-btn" onClick={handleRestart}>
+                  <img src={refreshCwIcon} alt="" />
+                  <span>Restart conversation</span>
+                </button>
+              </div>
+              <form
+                className={`ama-v3-composer ${showComposer ? 'is-visible' : ''}`}
+                onSubmit={handleComposerSubmit}
+              >
+                <input
+                  ref={composerInputRef}
+                  type="text"
+                  placeholder="Ask a question..."
+                  value={draftQuestion}
+                  onChange={(e) => setDraftQuestion(e.target.value)}
+                  onKeyDown={handleComposerKeyDown}
+                />
+                <button type="submit" disabled={!draftQuestion.trim()}>Send</button>
+              </form>
+            </>
           )}
         </div>
 
