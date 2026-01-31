@@ -431,9 +431,8 @@ function AskMeAnythingV4() {
                   }
                   {activeIndex === streamingIndex && <span className="ama-v4-cursor" />}
                 </div>
-                              </div>
-
               </div>
+            </div>
           )}
         </div>
 
