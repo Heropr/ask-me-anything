@@ -431,36 +431,29 @@ function AskMeAnythingV4() {
                   }
                   {activeIndex === streamingIndex && <span className="ama-v4-cursor" />}
                 </div>
-                <div className="ama-v4-separator" />
-              </div>
+                              </div>
 
-              {streamingIndex === null && (
-                <div className="ama-v4-explore-section" key={activeIndex}>
-                  <div className="ama-v4-explore-label">Continue exploring</div>
-                  <div className="ama-v4-explore-chips">
-                    {visibleFollowUps.map((question, index) => (
-                      <button
-                        key={index}
-                        className="ama-v4-explore-chip"
-                        onClick={() => handleQuestionClick(question)}
-                      >
-                        {question}
-                      </button>
-                    ))}
-                  </div>
-                  {!showAllFollowUps && hiddenCount > 0 && (
-                    <button
-                      className="ama-v4-show-more"
-                      onClick={() => setShowAllFollowUps(true)}
-                    >
-                      Show {hiddenCount} more questions
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
+              </div>
           )}
         </div>
+
+        {/* Follow-up Questions - anchored above input */}
+        {hasConversation && streamingIndex === null && (
+          <div className="ama-v4-explore-section" key={activeIndex}>
+            <div className="ama-v4-explore-label">Continue exploring</div>
+            <div className="ama-v4-explore-chips">
+              {followUps.slice(0, 6).map((question, index) => (
+                <button
+                  key={index}
+                  className="ama-v4-explore-chip"
+                  onClick={() => handleQuestionClick(question)}
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Input Bar */}
         <form className="ama-v4-input-bar" onSubmit={handleSubmit}>
